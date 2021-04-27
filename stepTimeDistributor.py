@@ -7,7 +7,7 @@ from pycomm3 import CIPDriver, LogixDriver
 
 #------------------------------------------------------------------------#
 
-plcInit = False
+sequences, seqTags = {}, {}
 inputCommands = {
     "discover": "Discover PLC's on the network",
     "init plc": "Initialize a connection to a plc", 
@@ -53,7 +53,6 @@ def discoverPLCs(): # Function to discover any PLC on the network
 
 def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive data from it
     seqs = {}
-    init = False
     try:
         print(f"Initializing connection to {ip}/{str(slot)}")
         plc = LogixDriver(f"{ip}/{str(slot)}", init_tags=True, init_program_tags=True) # Set up the LogixDriver for the stated PLC. This is returned to be used within other functions
@@ -75,11 +74,29 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
             for k, v in keySortDict(seqs).items(): # Sort the sequence alphabeticaly and loop through dictionary printing each key and value
                 print(f"{k} : {v}")
             plc.close()
-            init = True
     except Exception:
         plc.close()
         traceback.print_exc() 
-    return plc, keySortDict(seqs), init # Return the LogixDriver, a key sorted dictionary of sequence programs in the connected PLC and state of initializiation
+    return plc, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
+
+def initTags(plc, seqs): # Funtion to create all the step data tags required to read from and write to the PLC
+    tags = {}
+    for seq in seqs.keys(): # Loop for each sequence in the plc
+        maxStep = 99 # Max step initially set to 99
+        try: # Read the max step for the specified sequence
+            plc.open()
+            maxStep = plc.read(f"zzSeq[{seq}].MaxStepNo")
+            plc.close()
+        except Exception:
+            plc.close()
+            traceback.print_exc() 
+        tags.setdefault(seq, 
+            [f"zzSeq[{seq}].MaxStepNo", 
+            f"Program:{seqs[int(seq)]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
+            f"Program:{seqs[int(seq)]}.zzSteptimeLong[1]{{{maxStep.value}}}",
+            f"Program:{seqs[int(seq)]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
+        print(f"Initialized step tags for sequence {seq}, {seqs[int(seq)]}")
+    return tags # Return the tags to be used within other functions
 
 #------------------------------------------------------------------------#
 
@@ -95,6 +112,9 @@ if __name__ == "__main__":
             ip = input("PLC IP Address: ") # Request the PLC IP address 
             slot = input("Rack slot: ") # Request the rack slot number
             plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
+            print()
+        elif command.lower() == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
+            seqTags = initTags(plc, sequences)
             print()
         elif command.lower() == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
