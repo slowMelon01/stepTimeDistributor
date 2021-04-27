@@ -7,6 +7,7 @@ from pycomm3 import CIPDriver, LogixDriver
 
 #------------------------------------------------------------------------#
 
+plcInit = False
 inputCommands = {
     "discover": "Discover PLC's on the network",
     "init plc": "Initialize a connection to a plc", 
@@ -51,7 +52,8 @@ def discoverPLCs(): # Function to discover any PLC on the network
         traceback.print_exc()
 
 def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive data from it
-    sequences = {}
+    seqs = {}
+    init = False
     try:
         print(f"Initializing connection to {ip}/{str(slot)}")
         plc = LogixDriver(f"{ip}/{str(slot)}", init_tags=True, init_program_tags=True) # Set up the LogixDriver for the stated PLC. This is returned to be used within other functions
@@ -65,18 +67,19 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
                 mo1 = re.search(r'^S\d\d', prog)
                 if mo1 != None:
                     mo2 = re.search(r'\d\d', mo1.group()) # Search for the digits in the matched object and use them as keys in the sequences dictionary
-                    sequences[int(mo2.group())] = prog # Assign the key (sequence number) and value (program name) to the sequences dictionary
+                    seqs[int(mo2.group())] = prog # Assign the key (sequence number) and value (program name) to the sequences dictionary
             print("PLC Information:") # Display the PLC information to the user
             for k, v in plcInfo.items(): # Loop through dictionary printing each key and value
                 print(f"{k} : {v}")
             print("\nSequences:")
-            for k, v in keySortDict(sequences).items(): # Sort the sequence alphabeticaly and loop through dictionary printing each key and value
+            for k, v in keySortDict(seqs).items(): # Sort the sequence alphabeticaly and loop through dictionary printing each key and value
                 print(f"{k} : {v}")
             plc.close()
+            init = True
     except Exception:
         plc.close()
         traceback.print_exc() 
-    return plc, keySortDict(sequences) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
+    return plc, keySortDict(seqs), init # Return the LogixDriver, a key sorted dictionary of sequence programs in the connected PLC and state of initializiation
 
 #------------------------------------------------------------------------#
 
