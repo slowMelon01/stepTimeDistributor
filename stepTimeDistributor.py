@@ -95,8 +95,31 @@ def initTags(plc, seqs): # Funtion to create all the step data tags required to 
             f"Program:{seqs[int(seq)]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
             f"Program:{seqs[int(seq)]}.zzSteptimeLong[1]{{{maxStep.value}}}",
             f"Program:{seqs[int(seq)]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
-        print(f"Initialized step tags for sequence {seq}, {seqs[int(seq)]}")
+        print(f"Initialized step tags for sequence {seq}: {seqs[int(seq)]}")
     return tags # Return the tags to be used within other functions
+
+def clear(plc, tags, selSeq):
+    seqs = []
+    if selSeq.lower().find("all") != -1: # If the inputed sequences contains "all" then data for all sequences will be cleared
+        seqs = list(tags.keys())
+    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
+        seqs = selSeq.split(' ')
+    for seq in seqs: # Loop for each sequence that the user has inputted
+        try:
+            if int(seq) in list(tags.keys()): # Check the sequence is in the list of plc sequences
+                plc.open()
+                values = plc.read(tags[int(seq)][0]).value * [0] # Create a list of zeros equal to the length of the max step number
+                results = plc.write((tags[int(seq)][1], values), (tags[int(seq)][2], values), (tags[int(seq)][3], values)) # Write to the step time tags
+                if all(results): # Check that writes were successful
+                    print(f"Successfully cleared tags in sequence {seq}")
+                else:
+                    print(f"Failed to clear tags in sequence {seq}")
+                plc.close()  
+            else:
+                print(f"Sequence {seq} does not exist in the PLC")
+        except Exception:
+            plc.close()
+            traceback.print_exc()
 
 #------------------------------------------------------------------------#
 
@@ -115,6 +138,11 @@ if __name__ == "__main__":
             print()
         elif command.lower() == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             seqTags = initTags(plc, sequences)
+            print()
+        elif command.lower() == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
+            print("Choose the sequences you want to clear the step time data for\nE.g. 1 2 4 7 or ALL")
+            selectedSeq = input("Sequences: ")
+            clear(plc, seqTags, selectedSeq)
             print()
         elif command.lower() == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
