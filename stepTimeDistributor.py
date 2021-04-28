@@ -66,7 +66,7 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
                 mo1 = re.search(r'^S\d\d', prog)
                 if mo1 != None:
                     mo2 = re.search(r'\d\d', mo1.group()) # Search for the digits in the matched object and use them as keys in the sequences dictionary
-                    seqs[int(mo2.group())] = prog # Assign the key (sequence number) and value (program name) to the sequences dictionary
+                    seqs.setdefault(int(mo2.group()), prog) # Assign the key (sequence number) and value (program name) to the sequences dictionary
             print("PLC Information:") # Display the PLC information to the user
             for k, v in plcInfo.items(): # Loop through dictionary printing each key and value
                 print(f"{k} : {v}")
