@@ -2,7 +2,11 @@ TODO
 ====
 Essential
 ---------
-* Allow user to init tags for selected sequences or all
+* Remove whitespace from end of input command
+* In initTags and clear functions, allow more than one space between inputed sequences - regex required?
+* Change keys in seqs in function init plc to be str not int type
+    * Change need to be made throughout the other functions to suit this change
+        * Once complete, uncomment '#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")' in lines 149 & 155
 * Don't display any sequences that are unscheduled
 * Add protection to prevent the user from initializing tags before a PLC has been initialized
 * Add protection to prevent the user from clearing tags before tags have been initialized
@@ -19,3 +23,7 @@ Non-essential
     * Clear tags
     * Clear viewed data
 * Before exiting session use the reset function to clear the current data retrived from the PLC
+
+Completed
+---------
+* Allow user to init tags for selected sequences or all

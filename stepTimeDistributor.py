@@ -79,23 +79,31 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
         traceback.print_exc() 
     return plc, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
 
-def initTags(plc, seqs): # Funtion to create all the step data tags required to read from and write to the PLC
+def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
     tags = {}
-    for seq in seqs.keys(): # Loop for each sequence in the plc
+    seqs = []
+    if selSeq.lower().find("all") != -1: # If the inputed sequences contains "all" then tags for all sequences will be initiated
+        seqs = list(sequences.keys())
+    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
+        seqs = selSeq.split(' ')
+    for seq in seqs: # Loop for each sequence selected by the user
         maxStep = 99 # Max step initially set to 99
         try: # Read the max step for the specified sequence
-            plc.open()
-            maxStep = plc.read(f"zzSeq[{seq}].MaxStepNo")
-            plc.close()
+            if int(seq) in list(sequences.keys()): # Check the sequence is in the list of plc sequences
+                plc.open()
+                maxStep = plc.read(f"zzSeq[{seq}].MaxStepNo")
+                tags.setdefault(int(seq), 
+                    [f"zzSeq[{seq}].MaxStepNo", 
+                    f"Program:{sequences[int(seq)]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
+                    f"Program:{sequences[int(seq)]}.zzSteptimeLong[1]{{{maxStep.value}}}",
+                    f"Program:{sequences[int(seq)]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
+                print(f"Initialized step tags for sequence {seq}: {sequences[int(seq)]}")
+                plc.close()
+            else:
+                print(f"Sequence {seq} does not exist in the PLC")
         except Exception:
             plc.close()
-            traceback.print_exc() 
-        tags.setdefault(seq, 
-            [f"zzSeq[{seq}].MaxStepNo", 
-            f"Program:{seqs[int(seq)]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
-            f"Program:{seqs[int(seq)]}.zzSteptimeLong[1]{{{maxStep.value}}}",
-            f"Program:{seqs[int(seq)]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
-        print(f"Initialized step tags for sequence {seq}: {seqs[int(seq)]}")
+            traceback.print_exc()     
     return tags # Return the tags to be used within other functions
 
 def clear(plc, tags, selSeq):
@@ -116,7 +124,7 @@ def clear(plc, tags, selSeq):
                     print(f"Failed to clear tags in sequence {seq}")
                 plc.close()  
             else:
-                print(f"Sequence {seq} does not exist in the PLC")
+                print(f"Sequence {seq} tags have not been initialized yet")
         except Exception:
             plc.close()
             traceback.print_exc()
@@ -137,10 +145,14 @@ if __name__ == "__main__":
             plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
             print()
         elif command.lower() == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
-            seqTags = initTags(plc, sequences)
+            print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL")
+            #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+            selectedSeq = input("Sequences: ")
+            seqTags = initTags(plc, sequences, selectedSeq)
             print()
         elif command.lower() == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
-            print("Choose the sequences you want to clear the step time data for\nE.g. 1 2 4 7 or ALL")
+            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL")
+            #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
             selectedSeq = input("Sequences: ")
             clear(plc, seqTags, selectedSeq)
             print()
