@@ -2,7 +2,6 @@ TODO
 ====
 Essential
 ---------
-* Remove white space from the start and end of user inputs once they had requested one of the input commands
 * Allow the user to cancel and init tags or clear after they request it - when asked which sequences they want 
 * In initTags and clear functions, allow more than one space between inputed sequences - regex required?
 * Change keys in seqs in function init plc to be str not int type
@@ -29,3 +28,4 @@ Completed
 ---------
 * Allow user to init tags for selected sequences or all
 * Remove whitespace from the start and end of the input command
+* Remove whitespace from the start and end of user inputs once they had requested one of the input commands

@@ -140,20 +140,20 @@ if __name__ == "__main__":
             discoverPLCs() 
             print()
         elif command.lower() == "init plc": # INIT PLC - Initialize a connection to the specified PLC and return/display data from it
-            ip = input("PLC IP Address: ") # Request the PLC IP address 
-            slot = input("Rack slot: ") # Request the rack slot number
+            ip = input("PLC IP Address: ").strip() # Request the PLC IP address 
+            slot = input("Rack slot: ").strip() # Request the rack slot number
             plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
             print()
         elif command.lower() == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ")
+            selectedSeq = input("Sequences: ").strip
             seqTags = initTags(plc, sequences, selectedSeq)
             print()
         elif command.lower() == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ")
+            selectedSeq = input("Sequences: ").strip
             clear(plc, seqTags, selectedSeq)
             print()
         elif command.lower() == "help": # HELP - Display the commands avaiable to the user
