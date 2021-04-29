@@ -17,6 +17,11 @@ inputCommands = {
     "apply": "Apply data to zzStepRefTime for selected model varient and chosen sequences",
     "help": "Show help information", 
     "exit": "Exit the program"}
+ipRegex = re.compile(r'''
+    (\d{1,3}\.){3}\d{1,3}$ # IPv4
+    | ([0-9abcdef]{4}:){7}[0-9abcdef]{4} # IPv6
+    ''', re.VERBOSE)
+slotRegex = re.compile(r'\d+$')
 
 #------------------------------------------------------------------------#
 
@@ -76,8 +81,9 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
             plc.close()
     except Exception:
         plc.close()
-        traceback.print_exc() 
+        traceback.print_exc()
     return plc, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
+    
 
 def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
     tags = {}
@@ -134,31 +140,34 @@ def clear(plc, tags, selSeq):
 if __name__ == "__main__":
     displayCommands(inputCommands) # Display the avaiable commands to the user
     while True: # Run continuously until the user requests to exit
-        command = input("Command: ").strip() # Wait for a command for the user
+        command = input("Command: ").strip().lower() # Wait for a command for the user
         # Once a command is recieved, compare it to the avaible commands and run the asscoiated code
-        if command.lower() == "discover": # DISCOVER - Search the network for ALL CIP devices and return only the PLC's
+        if command == "discover": # DISCOVER - Search the network for ALL CIP devices and return only the PLC's
             discoverPLCs() 
             print()
-        elif command.lower() == "init plc": # INIT PLC - Initialize a connection to the specified PLC and return/display data from it
+        elif command == "init plc": # INIT PLC - Initialize a connection to the specified PLC and return/display data from it
             ip = input("PLC IP Address: ").strip() # Request the PLC IP address 
             slot = input("Rack slot: ").strip() # Request the rack slot number
-            plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
+            if re.match(ipRegex, ip) and re.match(slotRegex, slot): # Check IP in is a IPv4 or IPv6 format and the slot is an integer
+                plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
+            else: 
+                print('Format of IP address or slot was incorrect')
             print()
-        elif command.lower() == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
+        elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
             selectedSeq = input("Sequences: ").strip
             seqTags = initTags(plc, sequences, selectedSeq)
             print()
-        elif command.lower() == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
+        elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
             selectedSeq = input("Sequences: ").strip
             clear(plc, seqTags, selectedSeq)
             print()
-        elif command.lower() == "help": # HELP - Display the commands avaiable to the user
+        elif command == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
-        elif command.lower() == "exit": # EXIT - Terminiate the program
+        elif command == "exit": # EXIT - Terminiate the program
             print("EXITING PROGRAM")
             exit()
         else: # No valid command was inputed by the user
