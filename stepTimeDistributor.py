@@ -83,12 +83,11 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
         plc.close()
         traceback.print_exc()
     return plc, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
-    
 
 def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
     tags = {}
     seqs = []
-    if selSeq.lower().find("all") != -1: # If the inputed sequences contains "all" then tags for all sequences will be initiated
+    if selSeq.find("all") != -1: # If the inputed sequences contains "all" then tags for all sequences will be initiated
         seqs = list(sequences.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
         seqs = selSeq.split(' ')
@@ -114,7 +113,7 @@ def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags
 
 def clear(plc, tags, selSeq):
     seqs = []
-    if selSeq.lower().find("all") != -1: # If the inputed sequences contains "all" then data for all sequences will be cleared
+    if selSeq.find("all") != -1: # If the inputed sequences contains "all" then data for all sequences will be cleared
         seqs = list(tags.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
         seqs = selSeq.split(' ')
@@ -154,16 +153,22 @@ if __name__ == "__main__":
                 print('Format of IP address or slot was incorrect')
             print()
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
-            print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL")
+            print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ").strip
-            seqTags = initTags(plc, sequences, selectedSeq)
+            selectedSeq = input("Sequences: ").strip().lower()
+            if selectedSeq == 'cancel':
+                pass
+            else:
+                seqTags = initTags(plc, sequences, selectedSeq)
             print()
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
-            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL")
+            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ").strip
-            clear(plc, seqTags, selectedSeq)
+            selectedSeq = input("Sequences: ").strip().lower()
+            if selectedSeq == 'cancel':
+                pass
+            else:
+                clear(plc, seqTags, selectedSeq)
             print()
         elif command == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
