@@ -134,7 +134,7 @@ def clear(plc, tags, selSeq):
 if __name__ == "__main__":
     displayCommands(inputCommands) # Display the avaiable commands to the user
     while True: # Run continuously until the user requests to exit
-        command = input("Command: ") # Wait for a command for the user
+        command = input("Command: ").strip() # Wait for a command for the user
         # Once a command is recieved, compare it to the avaible commands and run the asscoiated code
         if command.lower() == "discover": # DISCOVER - Search the network for ALL CIP devices and return only the PLC's
             discoverPLCs() 
