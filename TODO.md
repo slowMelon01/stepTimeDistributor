@@ -9,7 +9,6 @@ Bugs
 
 Essential
 ---------
-* In initTags and clear functions, allow more than one space between inputed sequences - regex required?
 * Change keys in seqs in function init plc to be str not int type  
     * Change need to be made throughout the other functions to suit this change  
     * Once complete, uncomment `#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")`
@@ -46,3 +45,4 @@ Completed
     >File "~\stepTimeDistributor\stepTimeDistributor.py", line 145, in <module>  
     >plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC 
 * Allow the user to cancel init tags or clear after they request it - when asked which sequences they want 
+* In initTags and clear functions, allow more than one space between inputed sequences - regex required?

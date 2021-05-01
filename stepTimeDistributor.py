@@ -155,7 +155,7 @@ if __name__ == "__main__":
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ").strip().lower()
+            selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
             if selectedSeq == 'cancel':
                 pass
             else:
@@ -164,7 +164,7 @@ if __name__ == "__main__":
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
             #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input("Sequences: ").strip().lower()
+            selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
             if selectedSeq == 'cancel':
                 pass
             else:
