@@ -71,7 +71,7 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
                 mo1 = re.search(r'^S\d\d', prog)
                 if mo1 != None:
                     mo2 = re.search(r'\d\d', mo1.group()) # Search for the digits in the matched object and use them as keys in the sequences dictionary
-                    seqs.setdefault(int(mo2.group()), prog) # Assign the key (sequence number) and value (program name) to the sequences dictionary
+                    seqs.setdefault(mo2.group(), prog) # Assign the key (sequence number) and value (program name) to the sequences dictionary
             print("PLC Information:") # Display the PLC information to the user
             for k, v in plcInfo.items(): # Loop through dictionary printing each key and value
                 print(f"{k} : {v}")
@@ -91,18 +91,21 @@ def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags
         seqs = list(sequences.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
         seqs = selSeq.split(' ')
+        for i, s in enumerate(seqs):
+            if len(s) == 1:
+                seqs[i] = f'0{s}'
     for seq in seqs: # Loop for each sequence selected by the user
         maxStep = 99 # Max step initially set to 99
         try: # Read the max step for the specified sequence
-            if int(seq) in list(sequences.keys()): # Check the sequence is in the list of plc sequences
+            if seq in list(sequences.keys()): # Check the sequence is in the list of plc sequences
                 plc.open()
                 maxStep = plc.read(f"zzSeq[{seq}].MaxStepNo")
-                tags.setdefault(int(seq), 
+                tags.setdefault(seq, 
                     [f"zzSeq[{seq}].MaxStepNo", 
-                    f"Program:{sequences[int(seq)]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
-                    f"Program:{sequences[int(seq)]}.zzSteptimeLong[1]{{{maxStep.value}}}",
-                    f"Program:{sequences[int(seq)]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
-                print(f"Initialized step tags for sequence {seq}: {sequences[int(seq)]}")
+                    f"Program:{sequences[seq]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
+                    f"Program:{sequences[seq]}.zzSteptimeLong[1]{{{maxStep.value}}}",
+                    f"Program:{sequences[seq]}.zzSteptimeShort[1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
+                print(f"Initialized step tags for sequence {seq}: {sequences[seq]}")
                 plc.close()
             else:
                 print(f"Sequence {seq} does not exist in the PLC")
@@ -117,12 +120,15 @@ def clear(plc, tags, selSeq):
         seqs = list(tags.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
         seqs = selSeq.split(' ')
+        for i, s in enumerate(seqs):
+            if len(s) == 1:
+                seqs[i] = f'0{s}'
     for seq in seqs: # Loop for each sequence that the user has inputted
         try:
-            if int(seq) in list(tags.keys()): # Check the sequence is in the list of plc sequences
+            if seq in list(tags.keys()): # Check the sequence is in the list of plc sequences
                 plc.open()
-                values = plc.read(tags[int(seq)][0]).value * [0] # Create a list of zeros equal to the length of the max step number
-                results = plc.write((tags[int(seq)][1], values), (tags[int(seq)][2], values), (tags[int(seq)][3], values)) # Write to the step time tags
+                values = plc.read(tags[seq][0]).value * [0] # Create a list of zeros equal to the length of the max step number
+                results = plc.write((tags[seq][1], values), (tags[seq][2], values), (tags[seq][3], values)) # Write to the step time tags
                 if all(results): # Check that writes were successful
                     print(f"Successfully cleared tags in sequence {seq}")
                 else:
@@ -154,7 +160,7 @@ if __name__ == "__main__":
             print()
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
             selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
             if selectedSeq == 'cancel':
                 pass
@@ -163,7 +169,7 @@ if __name__ == "__main__":
             print()
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            #print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
             selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
             if selectedSeq == 'cancel':
                 pass

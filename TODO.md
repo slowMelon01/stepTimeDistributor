@@ -9,10 +9,7 @@ Bugs
 
 Essential
 ---------
-* Change keys in seqs in function init plc to be str not int type  
-    * Change need to be made throughout the other functions to suit this change  
-    * Once complete, uncomment `#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")`
-* Don't display any sequences that are unscheduled
+* Don't display any sequences that are unscheduled - Might not be possible as the info doesn't say which task the program belongs to
 * Add protection to prevent the user from initializing tags before a PLC has been initialized
 * Add protection to prevent the user from clearing tags before tags have been initialized
 * Add function to write data to the step ref time tags selected sequences of all  
@@ -30,6 +27,14 @@ Non-essential
     * Clear tags  
     * Clear viewed data  
 * Before exiting session use the reset function to clear the current data retrived from the PLC
+
+***
+
+To Be Tested
+------------
+* Change keys in seqs in function init plc to be str not int type  
+    * Change need to be made throughout the other functions to suit this change  
+    * Once complete, uncomment `#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")`
 
 ***
 
