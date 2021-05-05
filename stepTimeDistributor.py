@@ -91,9 +91,9 @@ def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags
         seqs = list(sequences.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
         seqs = selSeq.split(' ')
-        for i, s in enumerate(seqs):
+        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
             if len(s) == 1:
-                seqs[i] = f'0{s}'
+                seqs[i] = s.zfill(2)
     for seq in seqs: # Loop for each sequence selected by the user
         maxStep = 99 # Max step initially set to 99
         try: # Read the max step for the specified sequence
@@ -120,9 +120,9 @@ def clear(plc, tags, selSeq):
         seqs = list(tags.keys())
     else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
         seqs = selSeq.split(' ')
-        for i, s in enumerate(seqs):
+        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
             if len(s) == 1:
-                seqs[i] = f'0{s}'
+                seqs[i] = s.zfill(2)
     for seq in seqs: # Loop for each sequence that the user has inputted
         try:
             if seq in list(tags.keys()): # Check the sequence is in the list of plc sequences
