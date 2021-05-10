@@ -3,20 +3,24 @@ TODO
 
 Bugs
 ----
-
+* BUG - Move code that replaces anything thing that is not s digit from what the user has inputed into functions.  
+Currently the user cannot input "cancel" as all the characters will be replaces with a space.  
+Code to be moved `selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())` 2 occurances.
 
 ***
 
 Essential
 ---------
+* Create function that extracts the sequences from the user inputed text
 * Don't display any sequences that are unscheduled - Might not be possible as the info doesn't say which task the program belongs to
 * Add protection to prevent the user from initializing tags before a PLC has been initialized
 * Add protection to prevent the user from clearing tags before tags have been initialized
-* Add function to write data to the step ref time tags selected sequences of all  
+* Add function to write data to the step ref time tags selected sequences or all  
     * Choose from last, short or long  
     * Can apply additional time or % to each
-* Add protection to prevent the user from writing tags before tags have been initialized
+    * Add protection to prevent the user from writing tags before tags have been initialized
 * Add function to view current step time data in table format for selected sequences or all
+* Re-running init tags will discard anything already within the tags global dictionary. Add to this if possible and dont init tags that are already existing unless user requests it
 
 ***
 
