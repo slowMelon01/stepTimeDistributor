@@ -253,30 +253,33 @@ if __name__ == "__main__":
             print()
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
-            if selectedSeq == 'cancel':
+            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}") # Display avaiable sequences 
+            selectedSeq = input('Sequence: ').strip().lower() # User input
+            if selectedSeq == 'cancel': # If cancel then dont run initTags
                 pass
             else:
-                seqTags = initTags(plc, sequences, selectedSeq)
+                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                seqTags = initTags(plc, sequences, selectedSeq.strip()) # Initialize tags for selected sequences 
             print()
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
             print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
-            if selectedSeq == 'cancel':
+            selectedSeq = input('Sequence: ').strip().lower() # User input
+            if selectedSeq == 'cancel': # If cancel then dont run clear
                 pass
             else:
-                clear(plc, seqTags, selectedSeq)
+                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
             print()
         elif command == "write": # WRITE - Write data to the zzStepRefTime tags
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
             print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())
-            if selectedSeq == 'cancel':
+            selectedSeq = input('Sequence: ').strip().lower() # User input
+            if selectedSeq == 'cancel': # If cancel then dont run clear
                 pass
             else:
-                write(plc, seqTags, selectedSeq)
+                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                write(plc, seqTags, selectedSeq) # Write step times to stepRefTime tags for selected sequences 
             print()
         elif command == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
