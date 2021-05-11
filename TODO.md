@@ -33,9 +33,7 @@ Non-essential
 
 To Be Tested
 ------------
-* #17 Change keys in seqs in function init plc to be str not int type  
-    * Change need to be made throughout the other functions to suit this change  
-    * Once complete, uncomment `#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")`
+
 
 ***
 
@@ -58,3 +56,6 @@ Completed
 * #14 BUG - Move code that replaces anything thing that is not s digit from what the user has inputed into functions.  
 Currently the user cannot input "cancel" as all the characters will be replaces with a space.  
 Code to be moved `selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip().lower())` 3 occurances.
+* #17 Change keys in seqs in function init plc to be str not int type  
+    * Change need to be made throughout the other functions to suit this change  
+    * Once complete, uncomment `#print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")`
