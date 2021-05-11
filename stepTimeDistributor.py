@@ -54,6 +54,16 @@ def keySortDict(inDict, rev=False): # Funtion to sort a dictionary based on keys
         outDict.update({key : inDict.get(key)})
     return outDict # Return the key sorted dictionary
 
+def extractSequences(seqDict, userInput): # Function to extract sequence numbers from the user input
+    if userInput.find("all") != -1: # If the inputed sequences contains "all" then tags for all sequences will be initiated
+        seqs = list(seqDict.keys())
+    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
+        seqs = userInput.split(' ')
+        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
+            if len(s) == 1:
+                seqs[i] = s.zfill(2)
+    return seqs
+
 def discoverPLCs(): # Function to discover any PLC on the network
     plcs = []
     try:
@@ -101,14 +111,7 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
 
 def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
     tags = {}
-    seqs = []
-    if selSeq.find("all") != -1: # If the inputed sequences contains "all" then tags for all sequences will be initiated
-        seqs = list(sequences.keys())
-    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where the tags will be initiated
-        seqs = selSeq.split(' ')
-        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
-            if len(s) == 1:
-                seqs[i] = s.zfill(2)
+    seqs = extractSequences(sequences, selSeq)
     for seq in seqs: # Loop for each sequence selected by the user
         maxStep = 99 # Max step initially set to 99
         try: # Read the max step for the specified sequence
@@ -131,14 +134,7 @@ def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags
     return tags # Return the tags to be used within other functions
 
 def clear(plc, tags, selSeq): # Function to clear the current data within the PLC of the step time tags
-    seqs = []
-    if selSeq.find("all") != -1: # If the inputed sequences contains "all" then data for all sequences will be cleared
-        seqs = list(tags.keys())
-    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
-        seqs = selSeq.split(' ')
-        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
-            if len(s) == 1:
-                seqs[i] = s.zfill(2)
+    seqs = extractSequences(tags, selSeq)
     for seq in seqs: # Loop for each sequence that the user has inputted
         try:
             if seq in list(tags.keys()): # Check the sequence is in the list of PLC sequences
@@ -157,14 +153,7 @@ def clear(plc, tags, selSeq): # Function to clear the current data within the PL
             traceback.print_exc()
 
 def write(plc, tags, selSeq): # Function to write data to the step refrence time tag in the PLC
-    seqs, modValues = [], []
-    if selSeq.find("all") != -1: # If the inputed sequences contains "all" then data for all sequences will be cleared
-        seqs = list(tags.keys())
-    else: # If "all" was not present then split the inputed sequences by spaces and these are the sequences where data will be cleared
-        seqs = selSeq.split(' ')
-        for i, s in enumerate(seqs): # Loop through the inputed sequences and add a leading zeros if there is a single digit
-            if len(s) == 1:
-                seqs[i] = s.zfill(2)
+    seqs = extractSequences(tags, selSeq)
     while True:
         mo = re.match(typeRegex, input('Input type (1 to 10): ')) # Look for a match from the user input of 1 or 2 digits only or word cancel
         if mo:
@@ -211,6 +200,7 @@ def write(plc, tags, selSeq): # Function to write data to the step refrence time
                 readValues = plc.read(tags[seq][readTags]) # Read the values from the plc for the user specified tags. Either last, long or short
                 if readValues: # If read was successful
                     print(f'All values read successfully for sequence {seq}')
+                    modValues = []
                     for value in readValues.value: # Loop for each values retrived during the read
                         if applyType == 1: # Apply percentage
                             modValues.append(round(value * amount))
