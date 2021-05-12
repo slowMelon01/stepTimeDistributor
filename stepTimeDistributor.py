@@ -2,8 +2,14 @@
 # stepTimeDistributor.py
 #------------------------------------------------------------------------#
 
-import re, traceback
+import re
+import traceback
+
 from pycomm3 import CIPDriver, LogixDriver
+from rich import style
+from rich.console import JustifyMethod
+from rich.table import Table
+from rich import print
 
 #------------------------------------------------------------------------#
 
@@ -152,6 +158,53 @@ def clear(plc, tags, selSeq): # Function to clear the current data within the PL
             plc.close()
             traceback.print_exc()
 
+def view(plc, sequences, tags, selSeq): # Function to display the last, longest and shortest step times
+    seqs = extractSequences(tags, selSeq)
+    for seq in seqs:
+        try:
+            if seq in list(tags.keys()):
+                plc.open()
+                stepRefTags = []
+                for i in range(1, 11):
+                    stepRefTags.append(tags[seq][4].replace('xxTypexx', str(i)))
+                values = plc.read(tags[seq][0], tags[seq][1], tags[seq][2], tags[seq][3], *stepRefTags)
+                if all(values):
+                    table = Table(title=f'Sequence: {seq} - {sequences[seq]}\nMax Step Number: {values[0].value}', header_style='bold')
+                    table.add_column('STEP')
+                    table.add_column('LAST\n(ms)')
+                    table.add_column('LONG\n(ms)')
+                    table.add_column('SHORT\n(ms)')
+                    for i in range(1, 11):
+                        table.add_column(f'Ref Time\nType {i}\n(ms)')
+                    for i in range(values[0].value):
+                        table.add_row(
+                            f'{i+1}',
+                            f'{values[1].value[i]}',
+                            f'{values[2].value[i]}',
+                            f'{values[3].value[i]}',
+                            f'{values[4].value[i]}',
+                            f'{values[5].value[i]}',
+                            f'{values[6].value[i]}',
+                            f'{values[7].value[i]}',
+                            f'{values[8].value[i]}',
+                            f'{values[9].value[i]}',
+                            f'{values[10].value[i]}',
+                            f'{values[11].value[i]}',
+                            f'{values[12].value[i]}',
+                            f'{values[13].value[i]}'
+                        )
+                    print(table)
+                    print()
+                else:
+                    print(f'Failed to read step time data for sequence {seq}')
+                    print()
+                plc.close()
+            else:
+                print(f"Sequence {seq} tags have not been initialized yet")
+        except Exception:
+            plc.close()
+            traceback.print_exc()
+
 def write(plc, tags, selSeq): # Function to write data to the step refrence time tag in the PLC
     seqs = extractSequences(tags, selSeq)
     while True:
@@ -261,6 +314,16 @@ if __name__ == "__main__":
                 selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                 clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
             print()
+        elif command == "view": # VIEW - Display the last, long and short step times from the selected sequences
+            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
+            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+            selectedSeq = input('Sequence: ').strip().lower() # User input
+            if selectedSeq == 'cancel': # If cancel then dont run view
+                print()
+                pass
+            else:
+                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                view(plc, sequences, seqTags, selectedSeq) # Display step time data 
         elif command == "write": # WRITE - Write data to the zzStepRefTime tags
             print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
             print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
