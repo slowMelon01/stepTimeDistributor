@@ -25,11 +25,15 @@ inputCommands = {
 ipRegex = re.compile(r'''
     (\d{1,3}\.){3}\d{1,3}$ # IPv4
     | ([0-9abcdef]{4}:){7}[0-9abcdef]{4}$ # IPv6
-    ''', re.VERBOSE)
-slotRegex = re.compile(r'\d+$')
+    | ^cancel$ # Cancel the operation
+    ''', re.VERBOSE|re.I)
+slotRegex = re.compile(r'''
+    \d+$ # Any digit
+    | ^cancel$ # Cancel the operation
+    ''', re.VERBOSE|re.I)
 typeRegex = re.compile(r'''
 	\d{1,2}$ # 1 or 2 digits only
-	| cancel$ # Cancel the operation
+	| ^cancel$ # Cancel the operation
 	''', re.VERBOSE|re.I)
 writeRegex = re.compile(r'''
     ^last$ # Write zzSteptimeLast values
@@ -277,13 +281,28 @@ if __name__ == "__main__":
             discoverPLCs() 
             print()
         elif command == "init plc": # INIT PLC - Initialize a connection to the specified PLC and return/display data from it
-            ip = input("PLC IP Address: ").strip() # Request the PLC IP address 
-            slot = input("Rack slot: ").strip() # Request the rack slot number
-            if re.match(ipRegex, ip) and re.match(slotRegex, slot): # Check IP in is a IPv4 or IPv6 format and the slot is an integer
-                plc, plcInitOK, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
-            else: 
-                print('Format of IP address or slot was incorrect')
-            print()
+            ipOK = False
+            while True:
+                ip = re.match(ipRegex, input("PLC IP Address: ").strip()) # Request the PLC IP address and check it is the correct format
+                if ip: # IP address format OK
+                    if ip.group().lower() == 'cancel':
+                        print('Operation cancelled\n')
+                    else:
+                        ipOK = True # IP Address OK, allow user to enter slot
+                    break
+                else: # IP address format not OK
+                    print('Format of IP address was incorrect')
+            while ipOK:
+                slot = re.match(slotRegex, input("Rack slot: ").strip()) # Request the rack slot number
+                if slot: # Slot format OK
+                    if slot.group().lower() == 'cancel':
+                        print('Operation cancelled\n')
+                    else:
+                        plc, plcInitOK, sequences = initPLC(ip.group(), slot.group()) # Initialize the connection to the PLC
+                        print()
+                    break
+                else: # Slot format not OK
+                    print('Format of slot was incorrect')
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
             if plcInitOK == True:
                 print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
