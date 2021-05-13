@@ -6,14 +6,13 @@ import re
 import traceback
 
 from pycomm3 import CIPDriver, LogixDriver
-from rich import style
-from rich.console import JustifyMethod
-from rich.table import Table
 from rich import print
+from rich.table import Table
 
 #------------------------------------------------------------------------#
 
 sequences, seqTags = {}, {}
+plcInitOK = False
 inputCommands = {
     "discover": "Discover PLC's on the network",
     "init plc": "Initialize a connection to a PLC", 
@@ -39,10 +38,10 @@ writeRegex = re.compile(r'''
     | ^cancel$ # Cancel operation
     ''', re.VERBOSE|re.I)
 applyRegex = re.compile(r'''
-    ^none$
-    | ^percentage$
-    | ^time$
-    | ^cancel$
+    ^none$ # User doesn't want to apply any addition time
+    | ^percentage$ # Apply a percentage of the time, variable time
+    | ^time$ # Apply a fixed time 
+    | ^cancel$ # Cancel operation
     ''', re.VERBOSE|re.I)
 #------------------------------------------------------------------------#
 
@@ -89,6 +88,7 @@ def discoverPLCs(): # Function to discover any PLC on the network
 
 def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive data from it
     seqs = {}
+    initOK = False
     try:
         print(f"Initializing connection to {ip}/{str(slot)}")
         plc = LogixDriver(f"{ip}/{str(slot)}", init_tags=True, init_program_tags=True) # Set up the LogixDriver for the stated PLC. This is returned to be used within other functions
@@ -110,10 +110,11 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
             for k, v in keySortDict(seqs).items(): # Sort the sequence alphabeticaly and loop through dictionary printing each key and value
                 print(f"{k} : {v}")
             plc.close()
+            initOK = True
     except Exception:
         plc.close()
         traceback.print_exc()
-    return plc, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
+    return plc, initOK, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
 
 def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
     tags = {}
@@ -143,7 +144,7 @@ def clear(plc, tags, selSeq): # Function to clear the current data within the PL
     seqs = extractSequences(tags, selSeq)
     for seq in seqs: # Loop for each sequence that the user has inputted
         try:
-            if seq in list(tags.keys()): # Check the sequence is in the list of PLC sequences
+            if seq in list(tags.keys()): # Check the sequence is in the list of PLC sequences where tags have been initialized
                 plc.open()
                 values = plc.read(tags[seq][0]).value * [0] # Create a list of zeros equal to the length of the max step number
                 results = plc.write((tags[seq][1], values), (tags[seq][2], values), (tags[seq][3], values)) # Write to the step time tags 
@@ -160,45 +161,32 @@ def clear(plc, tags, selSeq): # Function to clear the current data within the PL
 
 def view(plc, sequences, tags, selSeq): # Function to display the last, longest and shortest step times
     seqs = extractSequences(tags, selSeq)
-    for seq in seqs:
+    for seq in seqs: # Loop for each sequence that the user has inputted
         try:
-            if seq in list(tags.keys()):
-                plc.open()
+            if seq in list(tags.keys()): # Check the sequence is in the list of PLC sequences where tags have been initialized
+                plc.open() # Open connection
                 stepRefTags = []
-                for i in range(1, 11):
+                for i in range(1, 11): # Create tags to read from the PLC for all types
                     stepRefTags.append(tags[seq][4].replace('xxTypexx', str(i)))
-                values = plc.read(tags[seq][0], tags[seq][1], tags[seq][2], tags[seq][3], *stepRefTags)
-                if all(values):
-                    table = Table(title=f'Sequence: {seq} - {sequences[seq]}\nMax Step Number: {values[0].value}', header_style='bold')
-                    table.add_column('STEP')
-                    table.add_column('LAST\n(ms)')
-                    table.add_column('LONG\n(ms)')
-                    table.add_column('SHORT\n(ms)')
+                values = plc.read(tags[seq][0], tags[seq][1], tags[seq][2], tags[seq][3], *stepRefTags) # Read tag values from the PLC
+                if all(values): # Only continue is all reads were successful
+                    table = Table(title=f'Sequence: {seq} - {sequences[seq]}\nMax Step Number: {values[0].value}', header_style='bold') # Create a table
+                    table.add_column('STEP') # Assign column
+                    table.add_column('LAST\n(ms)') # Assign column
+                    table.add_column('LONG\n(ms)') # Assign column
+                    table.add_column('SHORT\n(ms)') # Assign column
                     for i in range(1, 11):
-                        table.add_column(f'Ref Time\nType {i}\n(ms)')
+                        table.add_column(f'Ref Time\nType {i}\n(ms)') # Assign column
                     for i in range(values[0].value):
-                        table.add_row(
-                            f'{i+1}',
-                            f'{values[1].value[i]}',
-                            f'{values[2].value[i]}',
-                            f'{values[3].value[i]}',
-                            f'{values[4].value[i]}',
-                            f'{values[5].value[i]}',
-                            f'{values[6].value[i]}',
-                            f'{values[7].value[i]}',
-                            f'{values[8].value[i]}',
-                            f'{values[9].value[i]}',
-                            f'{values[10].value[i]}',
-                            f'{values[11].value[i]}',
-                            f'{values[12].value[i]}',
-                            f'{values[13].value[i]}'
-                        )
-                    print(table)
+                        table.add_row(f'{i+1}', f'{values[1].value[i]}', f'{values[2].value[i]}', f'{values[3].value[i]}',
+                            f'{values[4].value[i]}', f'{values[5].value[i]}', f'{values[6].value[i]}', f'{values[7].value[i]}', 
+                            f'{values[8].value[i]}', f'{values[9].value[i]}',f'{values[10].value[i]}', f'{values[11].value[i]}', 
+                            f'{values[12].value[i]}', f'{values[13].value[i]}') # Assign row data
+                    print(table) # Display the table
                     print()
-                else:
-                    print(f'Failed to read step time data for sequence {seq}')
-                    print()
-                plc.close()
+                else: # Any of the reads were unsuccessful
+                    print(f'Failed to read step time data for sequence {seq}\n')
+                plc.close() # Close connection
             else:
                 print(f"Sequence {seq} tags have not been initialized yet")
         except Exception:
@@ -290,49 +278,61 @@ if __name__ == "__main__":
             ip = input("PLC IP Address: ").strip() # Request the PLC IP address 
             slot = input("Rack slot: ").strip() # Request the rack slot number
             if re.match(ipRegex, ip) and re.match(slotRegex, slot): # Check IP in is a IPv4 or IPv6 format and the slot is an integer
-                plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
+                plc, plcInitOK, sequences = initPLC(ip, slot) # Initialize the connection to the PLC
             else: 
                 print('Format of IP address or slot was incorrect')
             print()
         elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
-            print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}") # Display avaiable sequences 
-            selectedSeq = input('Sequence: ').strip().lower() # User input
-            if selectedSeq == 'cancel': # If cancel then dont run initTags
-                pass
+            if plcInitOK == True:
+                print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
+                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}") # Display avaiable sequences 
+                selectedSeq = input('Sequence: ').strip().lower() # User input
+                if selectedSeq == 'cancel': # If cancel then dont run initTags
+                    pass
+                else:
+                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    seqTags = initTags(plc, sequences, selectedSeq.strip()) # Initialize tags for selected sequences 
             else:
-                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                seqTags = initTags(plc, sequences, selectedSeq.strip()) # Initialize tags for selected sequences 
+                print('A PLC connection has not been initialized yet. Use \'init plc\'')
             print()
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
-            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input('Sequence: ').strip().lower() # User input
-            if selectedSeq == 'cancel': # If cancel then dont run clear
-                pass
+            if len(seqTags) > 0:
+                print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
+                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                selectedSeq = input('Sequence: ').strip().lower() # User input
+                if selectedSeq == 'cancel': # If cancel then dont run clear
+                    pass
+                else:
+                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
             else:
-                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
+                print('No tags have been initialized yet. Use \'init tags\'')
             print()
         elif command == "view": # VIEW - Display the last, long and short step times from the selected sequences
-            print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input('Sequence: ').strip().lower() # User input
-            if selectedSeq == 'cancel': # If cancel then dont run view
-                print()
-                pass
+            if len(seqTags) > 0:
+                print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
+                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                selectedSeq = input('Sequence: ').strip().lower() # User input
+                if selectedSeq == 'cancel': # If cancel then dont run view
+                    print()
+                    pass
+                else:
+                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    view(plc, sequences, seqTags, selectedSeq) # Display step time data 
             else:
-                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                view(plc, sequences, seqTags, selectedSeq) # Display step time data 
+                print('No tags have been initialized yet. Use \'init tags\'\n')
         elif command == "write": # WRITE - Write data to the zzStepRefTime tags
-            print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-            print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
-            selectedSeq = input('Sequence: ').strip().lower() # User input
-            if selectedSeq == 'cancel': # If cancel then dont run clear
-                pass
+            if len(seqTags) > 0:
+                print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
+                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                selectedSeq = input('Sequence: ').strip().lower() # User input
+                if selectedSeq == 'cancel': # If cancel then dont run clear
+                    pass
+                else:
+                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    write(plc, seqTags, selectedSeq) # Write step times to stepRefTime tags for selected sequences 
             else:
-                selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                write(plc, seqTags, selectedSeq) # Write step times to stepRefTime tags for selected sequences 
+                print('No tags have been initialized yet. Use \'init tags\'')
             print()
         elif command == "help": # HELP - Display the commands avaiable to the user
             displayCommands(inputCommands) # Display the avaiable commands to the user
