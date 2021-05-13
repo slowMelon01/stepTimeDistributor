@@ -225,6 +225,8 @@ def write(plc, tags, selSeq): # Function to write data to the step refrence time
         if mo:
             if mo.group().lower() == 'cancel': # If user inputs cancel then return without writing any values
                 return
+            if mo.group().lower() == 'none':
+                break # Break from the while loop
             if mo.group().lower() == 'percentage': # User inputs percentage
                 amount = 1 + (float(input('Enter percentage amount (0 to 100): ')) / 100) # Set amount to the float coverted input
                 applyType = 1 # Set applyType to 1 (percentage), this will be used later when extra time is applied
@@ -287,8 +289,8 @@ if __name__ == "__main__":
                 print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
                 print(f"PLC Sequences: {' '.join(list(sequences.keys()))}") # Display avaiable sequences 
                 selectedSeq = input('Sequence: ').strip().lower() # User input
-                if selectedSeq == 'cancel': # If cancel then dont run initTags
-                    pass
+                if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run initTags
+                    print('Operation cancelled or no sequences chosen')
                 else:
                     selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                     seqTags = initTags(plc, sequences, selectedSeq.strip()) # Initialize tags for selected sequences 
@@ -300,8 +302,8 @@ if __name__ == "__main__":
                 print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
                 print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
-                if selectedSeq == 'cancel': # If cancel then dont run clear
-                    pass
+                if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run clear
+                    print('Operation cancelled or no sequences chosen')
                 else:
                     selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                     clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
@@ -313,12 +315,12 @@ if __name__ == "__main__":
                 print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
                 print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
-                if selectedSeq == 'cancel': # If cancel then dont run view
-                    print()
-                    pass
+                if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run view
+                    print('Operation cancelled or no sequences chosen\n')
                 else:
                     selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                     view(plc, sequences, seqTags, selectedSeq) # Display step time data 
+                    print()
             else:
                 print('No tags have been initialized yet. Use \'init tags\'\n')
         elif command == "write": # WRITE - Write data to the zzStepRefTime tags
@@ -326,8 +328,8 @@ if __name__ == "__main__":
                 print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
                 print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
-                if selectedSeq == 'cancel': # If cancel then dont run clear
-                    pass
+                if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run write
+                    print('Operation cancelled or no sequences chosen')
                 else:
                     selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                     write(plc, seqTags, selectedSeq) # Write step times to stepRefTime tags for selected sequences 
