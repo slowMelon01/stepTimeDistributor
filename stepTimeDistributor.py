@@ -319,7 +319,7 @@ if __name__ == "__main__":
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             if len(seqTags) > 0:
                 print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
-                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                print(f"Avaiable PLC Sequences: {' '.join(list(seqTags.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run clear
                     print('Operation cancelled or no sequences chosen')
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         elif command == "view": # VIEW - Display the last, long and short step times from the selected sequences
             if len(seqTags) > 0:
                 print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
-                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                print(f"Avaiable PLC Sequences: {' '.join(list(seqTags.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run view
                     print('Operation cancelled or no sequences chosen\n')
@@ -345,7 +345,7 @@ if __name__ == "__main__":
         elif command == "write": # WRITE - Write data to the zzStepRefTime tags
             if len(seqTags) > 0:
                 print("Choose the sequences you want to initiate the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}")
+                print(f"Avaiable PLC Sequences: {' '.join(list(seqTags.keys()))}")
                 selectedSeq = input('Sequence: ').strip().lower() # User input
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run write
                     print('Operation cancelled or no sequences chosen')
