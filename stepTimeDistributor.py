@@ -312,7 +312,7 @@ if __name__ == "__main__":
                     print('Operation cancelled or no sequences chosen')
                 else:
                     selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                    seqTags = initTags(plc, sequences, selectedSeq.strip()) # Initialize tags for selected sequences 
+                    seqTags.update(initTags(plc, sequences, selectedSeq.strip())) # Initialize tags for selected sequences 
             else:
                 print('A PLC connection has not been initialized yet. Use \'init plc\'')
             print()

@@ -2,20 +2,17 @@ TODO
 ====
 Bugs
 ----
-
+* #23 User can not input 'all' anymore as any non-digits get replaced by spaces
 ***
 Essential
 ---------
-* #13 Re-running init tags will discard anything already within the tags global dictionary. Add to this if possible and dont init tags that are already existing unless user requests it
 * #22 Modifiy clear funtion to allow the user to clear the step reference times as well
-***
-Non-essential
--------------
 * #15 Add funtion to reset session that clears all the current data retrived from the PLC  
     * Clear logixdriver  
     * Clear tags  
-    * Clear viewed data  
-* #16 Before exiting session use the reset function to clear the current data retrived from the PLC
+***
+Non-essential
+-------------
 * #21 Use Rich library to impove GUI
 ***
 To Be Tested
@@ -51,8 +48,11 @@ Code to be moved `selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip()
 * #18 Add protection to prevent the user from writing tags before tags have been initialized
 * #19 Allow user to cancel when initializing a plc connection. When entering ip address or slot number
 * #20 For clear, write and view functions, only display sequences where the tags have been initialized to the user
+* #13 Re-running init tags will discard anything already within the tags global dictionary. Add to this if possible and dont init tags that are already existing unless user requests it
 ***
 Discarded
 ---------
 * #8 Don't display any sequences that are unscheduled
     * Not possible as the info doesn't say which task the program belongs to
+* #16 Before exiting session use the reset function to clear the current data retrived from the PLC
+    * Not needed
