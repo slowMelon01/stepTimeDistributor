@@ -311,7 +311,8 @@ if __name__ == "__main__":
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run initTags
                     print('Operation cancelled or no sequences chosen')
                 else:
-                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    if selectedSeq != 'all':
+                        selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
                     seqTags.update(initTags(plc, sequences, selectedSeq.strip())) # Initialize tags for selected sequences 
             else:
                 print('A PLC connection has not been initialized yet. Use \'init plc\'')
@@ -324,8 +325,9 @@ if __name__ == "__main__":
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run clear
                     print('Operation cancelled or no sequences chosen')
                 else:
-                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                    clear(plc, seqTags, selectedSeq) # Clear step time values in last, long and short for selected sequences 
+                    if selectedSeq != 'all':
+                        selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    clear(plc, seqTags, selectedSeq.strip()) # Clear step time values in last, long and short for selected sequences 
             else:
                 print('No tags have been initialized yet. Use \'init tags\'')
             print()
@@ -337,8 +339,9 @@ if __name__ == "__main__":
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run view
                     print('Operation cancelled or no sequences chosen\n')
                 else:
-                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                    view(plc, sequences, seqTags, selectedSeq) # Display step time data 
+                    if selectedSeq != 'all':
+                        selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    view(plc, sequences, seqTags, selectedSeq.strip()) # Display step time data 
                     print()
             else:
                 print('No tags have been initialized yet. Use \'init tags\'\n')
@@ -350,8 +353,9 @@ if __name__ == "__main__":
                 if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run write
                     print('Operation cancelled or no sequences chosen')
                 else:
-                    selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                    write(plc, seqTags, selectedSeq) # Write step times to stepRefTime tags for selected sequences 
+                    if selectedSeq != 'all':
+                        selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
+                    write(plc, seqTags, selectedSeq.strip()) # Write step times to stepRefTime tags for selected sequences 
             else:
                 print('No tags have been initialized yet. Use \'init tags\'')
             print()
