@@ -15,6 +15,7 @@ Essential
 Non-essential
 -------------
 * #21 Use Rich library to impove GUI
+* #25 Make use of logging to help with debugging
 ***
 To Be Tested
 ------------
