@@ -28,9 +28,9 @@ Completed
 * #3 Remove whitespace from the start and end of user inputs once they had requested one of the input commands
 * #4 BUG - if user inputs incorrect ip address and slot then this error occurs  
     >Exception has occurred: UnboundLocalErrorlocal variable 'plc' referenced before assignment  
-    >File "~\stepTimeDistributor\stepTimeDistributor.py", line 78, in initPLC  
+    >File "..\stepTimeDistributor\stepTimeDistributor.py", line 78, in initPLC  
     >plc.close()  
-    >File "~\stepTimeDistributor\stepTimeDistributor.py", line 145, in <module>  
+    >File "..\stepTimeDistributor\stepTimeDistributor.py", line 145, in <module>  
     >plc, sequences = initPLC(ip, slot) # Initialize the connection to the PLC 
 * #5 Allow the user to cancel init tags or clear after they request it - when asked which sequences they want 
 * #6 In initTags and clear functions, allow more than one space between inputed sequences - regex required?
