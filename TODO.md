@@ -11,6 +11,7 @@ Essential
     * Clear logixdriver  
     * Clear tags  
 * #24 Allow user to write step reference times to multiple types
+* #26 Add ReadMe / User guide
 ***
 Non-essential
 -------------
