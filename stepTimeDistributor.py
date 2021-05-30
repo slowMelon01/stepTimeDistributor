@@ -146,12 +146,20 @@ def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags
 
 def clear(plc, tags, selSeq): # Function to clear the current data within the PLC of the step time tags
     seqs = extractSequences(tags, selSeq)
+    answer = input('Clear current step reference times for all types? (y/n) ')
     for seq in seqs: # Loop for each sequence that the user has inputted
         try:
             if seq in list(tags.keys()): # Check the sequence is in the list of PLC sequences where tags have been initialized
                 plc.open()
                 values = plc.read(tags[seq][0]).value * [0] # Create a list of zeros equal to the length of the max step number
-                results = plc.write((tags[seq][1], values), (tags[seq][2], values), (tags[seq][3], values)) # Write to the step time tags 
+                if answer.lower() == 'y':
+                    stepRefTimeTypes = [tags[seq][4].replace('xxTypexx', str(i)) for i in range(1, 11)]
+                    results = plc.write((tags[seq][1], values), (tags[seq][2], values), (tags[seq][3], values), (stepRefTimeTypes[0], values),
+                        (stepRefTimeTypes[1], values), (stepRefTimeTypes[2], values), (stepRefTimeTypes[3], values), 
+                        (stepRefTimeTypes[4], values), (stepRefTimeTypes[5], values), (stepRefTimeTypes[6], values), 
+                        (stepRefTimeTypes[7], values), (stepRefTimeTypes[8], values), (stepRefTimeTypes[9], values)) # Write to the step time tags 
+                else:
+                    results = plc.write((tags[seq][1], values), (tags[seq][2], values), (tags[seq][3], values)) # Write to the step time tags 
                 if all(results): # Check that writes were successful
                     print(f"Successfully cleared tags in sequence {seq}")
                 else:

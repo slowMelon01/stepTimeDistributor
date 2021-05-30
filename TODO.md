@@ -6,12 +6,12 @@ Bugs
 ***
 Essential
 ---------
-* #22 Modifiy clear funtion to allow the user to clear the step reference times as well
 * #15 Add funtion to reset session that clears all the current data retrived from the PLC  
     * Clear logixdriver  
     * Clear tags  
 * #24 Allow user to write step reference times to multiple types
 * #26 Add ReadMe / User guide
+
 ***
 Non-essential
 -------------
@@ -21,6 +21,7 @@ Non-essential
 To Be Tested
 ------------
 * #23 User can not input 'all' anymore as any non-digits get replaced by spaces
+* #22 Modifiy clear funtion to allow the user to clear the step reference times as well
 ***
 Completed
 ---------
