@@ -14,7 +14,6 @@ Essential
 ***
 Non-essential
 -------------
-* #21 Use Rich library to impove GUI
 * #25 Make use of logging to help with debugging
 ***
 To Be Tested
@@ -53,6 +52,7 @@ Code to be moved `selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip()
 * #20 For clear, write and view functions, only display sequences where the tags have been initialized to the user
 * #13 Re-running init tags will discard anything already within the tags global dictionary. Add to this if possible and dont init tags that are already existing unless user requests it
 * #26 Add ReadMe / User guide
+* #21 Use Rich library to impove GUI
 ***
 Discarded
 ---------
