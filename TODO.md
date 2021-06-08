@@ -10,8 +10,7 @@ Essential
     * Clear logixdriver  
     * Clear tags  
 * #24 Allow user to write step reference times to multiple types
-* #26 Add ReadMe / User guide
-
+* #27 Combine **init plc** and **init tags** to just **init**. This will initialize tags for all sequences. Less user input required.
 ***
 Non-essential
 -------------
@@ -53,6 +52,7 @@ Code to be moved `selectedSeq = re.sub(r'\D+', ' ', input("Sequences: ").strip()
 * #19 Allow user to cancel when initializing a plc connection. When entering ip address or slot number
 * #20 For clear, write and view functions, only display sequences where the tags have been initialized to the user
 * #13 Re-running init tags will discard anything already within the tags global dictionary. Add to this if possible and dont init tags that are already existing unless user requests it
+* #26 Add ReadMe / User guide
 ***
 Discarded
 ---------
