@@ -281,10 +281,7 @@ def write(plc, tags, selSeq): # Function to write data to the step refrence time
                 if readValues: # If read was successful
                     print(f'All values read successfully for sequence {seq}')
                     modValues = []
-
-                    #for value in readValues.value: # Loop for each values retrived during the read
-                    for i, value in enumerate(readValues):
-
+                    for i, value in enumerate(readValues[1].value): # Loop for each values retrived during the read
                         if applyType == 1: # Apply percentage
                             addTime = round(value * (amount / 100))
                         elif applyType == 2: # Apply fixed time
