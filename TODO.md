@@ -6,20 +6,18 @@ Bugs
 ***
 Essential
 ---------
-* #15 Add funtion to reset session that clears all the current data retrived from the PLC  
-    * Clear logixdriver  
-    * Clear tags  
-* #24 Allow user to write step reference times to multiple types
-* #27 Combine **init plc** and **init tags** to just **init**. This will initialize tags for all sequences. Less user input required.
+
 ***
 Non-essential
 -------------
+* #24 Allow user to write step reference times to multiple types
 * #25 Make use of logging to help with debugging
 ***
 To Be Tested
 ------------
 * #23 User can not input 'all' anymore as any non-digits get replaced by spaces
 * #22 Modifiy clear funtion to allow the user to clear the step reference times as well
+* #27 Combine **init plc** and **init tags** to just **init**. This will initialize tags for all sequences. Less user input required.
 ***
 Completed
 ---------
@@ -60,3 +58,7 @@ Discarded
     * Not possible as the info doesn't say which task the program belongs to
 * #16 Before exiting session use the reset function to clear the current data retrived from the PLC
     * Not needed
+* #15 Add funtion to reset session that clears all the current data retrived from the PLC  
+    * Clear logixdriver  
+    * Clear tags
+        * Not needed as user can just 'init' new plc to start again. This overwirtes the exising logixDriver and created tags.  

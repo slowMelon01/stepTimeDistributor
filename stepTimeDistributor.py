@@ -14,41 +14,14 @@ from rich.panel import Panel
 #------------------------------------------------------------------------#
 
 sequences, seqTags = {}, {}
-plcInitOK = False
 inputCommands = {
     "discover": "Discover PLC's on the network",
-    "init plc": "Initialize a connection to a PLC", 
-    "init tags": "Initialize the step time tags using the connected PLC information",
+    "init": "Initialize a connection to a PLC", 
     "clear": "Clear the current data in zzSteptimeLast, zzSteptimeShort and zzSteptimeLong for chosen sequences",
     "view": "View the current data in zzSteptimeLast, zzSteptimeShort and zzSteptimeLong for chosen sequences",
     "write": "Write data to zzStepRefTime for selected model varient and chosen sequences",
     "help": "Show help information", 
     "exit": "Exit the program"}
-ipRegex = re.compile(r'''
-    (\d{1,3}\.){3}\d{1,3}$ # IPv4
-    | ([0-9abcdef]{4}:){7}[0-9abcdef]{4}$ # IPv6
-    | ^cancel$ # Cancel the operation
-    ''', re.VERBOSE|re.I)
-slotRegex = re.compile(r'''
-    \d+$ # Any digit
-    | ^cancel$ # Cancel the operation
-    ''', re.VERBOSE|re.I)
-typeRegex = re.compile(r'''
-	\d{1,2}$ # 1 or 2 digits only
-	| ^cancel$ # Cancel the operation
-	''', re.VERBOSE|re.I)
-writeRegex = re.compile(r'''
-    ^last$ # Write zzSteptimeLast values
-    | ^long$ # Write zzSteptimeLong values
-    | ^short$ # Write zzSteptimeShort values
-    | ^cancel$ # Cancel operation
-    ''', re.VERBOSE|re.I)
-applyRegex = re.compile(r'''
-    ^none$ # User doesn't want to apply any addition time
-    | ^percentage$ # Apply a percentage of the time, variable time
-    | ^time$ # Apply a fixed time 
-    | ^cancel$ # Cancel operation
-    ''', re.VERBOSE|re.I)
 
 #------------------------------------------------------------------------#
 
@@ -75,32 +48,75 @@ def extractSequences(seqDict, userInput): # Function to extract sequence numbers
     return seqs
 
 def discoverPLCs(): # Function to discover any PLC on the network
-    plcs = []
+    ips, slots, progName = [], [], []
     try:
         discovery = CIPDriver.discover() # Return list of all CIP devices on the network
         for device in discovery: # Go through discovery list and append any PLC#'s to a list
             if device['product_type'] == "Programmable Logic Controller":
-                plcs.append(device['ip_address'])        
-        if len(plcs) > 0: # Print the discovered PLC's, if there are any
-            plcs.sort() # Sort the IP address in ascending order
+                ips.append(device['ip_address'])        
+        if len(ips) > 0: # Print the discovered PLC's, if there are any
+            ips.sort() # Sort the IP address in ascending order
             table = Table(box=box.ROUNDED) # Create table 
-            table.add_column('No.', justify='center') # Add column
+            table.add_column('#', justify='center') # Add column
             table.add_column('Device Type', justify='center') # Add column
             table.add_column('IP Address', justify='center') # Add column
-            for i, plc in enumerate(plcs): # Add row for each PLC discovered
-                table.add_row(str(i+1), 'Programmable Logic Controller', plc)
+            table.add_column('Slot #', justify='center') # Add column
+            table.add_column('Program Name', justify='center') # Add column
+            for i, ip in enumerate(ips): # Add row for each PLC discovered
+                slots.append('Unknown')
+                progName.append('Unknown')
+                for slot in range(1, 18):
+                    try:
+                        plc = LogixDriver(f'{plc}/{str(slot)}', init_tags=False)
+                        if plc.open():
+                            slots[i] = slot
+                            progName[i] = plc.get_plc_name()
+                            plc.close()
+                            break
+                    except:
+                        continue
+                table.add_row(str(i+1), 'Programmable Logic Controller', ip, str(slots[i]), progName[i])
             print(table)
         else:
             print("No PLC's discovered on the network")
     except Exception:
         traceback.print_exc()
 
-def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive data from it
-    seqs = {}
-    initOK = False
+def init(): # Funtion to initialize a connection to a PLC and retrive data from it
+    seqs, tags = {}, {}
+    ipOK, slotOK = False, False
+    ipRegex = re.compile(r'''
+    (\d{1,3}\.){3}\d{1,3}$ # IPv4
+    | ([0-9abcdef]{4}:){7}[0-9abcdef]{4}$ # IPv6
+    | ^cancel$ # Cancel the operation
+    ''', re.VERBOSE|re.I)
+    slotRegex = re.compile(r'''
+    \d+$ # Any digit
+    | ^cancel$ # Cancel the operation
+    ''', re.VERBOSE|re.I)
+    while ipOK == False:
+        ip = re.match(ipRegex, input("PLC IP Address: ").strip()) # Request the PLC IP address and check it is the correct format
+        if ip: # IP address format OK
+            if ip.group().lower() == 'cancel':
+                print('Operation cancelled\n')
+                return None, seqs, tags
+            else:
+                ipOK = True # IP Address OK, allow user to enter slot
+        else: # IP address format not OK
+            print('Format of IP address was incorrect')
+    while slotOK == False:
+        slot = re.match(slotRegex, input("Rack slot: ").strip()) # Request the rack slot number
+        if slot: # Slot format OK
+            if slot.group().lower() == 'cancel':
+                print('Operation cancelled\n')
+                return None, seqs, tags
+            else:
+                slotOK = True
+        else: # Slot format not OK
+            print('Format of slot was incorrect')
     try:
-        print(f"Initializing connection to {ip}/{str(slot)}")
-        plc = LogixDriver(f"{ip}/{str(slot)}", init_tags=True, init_program_tags=True) # Set up the LogixDriver for the stated PLC. This is returned to be used within other functions
+        print(f"Initializing connection to {ip.group()}/{str(slot.group())}")
+        plc = LogixDriver(f"{ip.group()}/{str(slot.group())}", init_tags=True, init_program_tags=True) # Set up the LogixDriver for the stated PLC. This is returned to be used within other functions
         if plc.open(): # Open the connection to the PLC and read data from it
             print("Connection to PLC established")
             plcInfo = plc.info # Write the PLC info to a variable
@@ -112,46 +128,31 @@ def initPLC(ip, slot): # Funtion to initialize a connection to a PLC and retrive
                 if mo1 != None:
                     mo2 = re.search(r'\d\d', mo1.group()) # Search for the digits in the matched object and use them as keys in the sequences dictionary
                     seqs.setdefault(mo2.group(), prog) # Assign the key (sequence number) and value (program name) to the sequences dictionary
+            seqs = keySortDict(seqs) # Sort the sequence dictionary based on sequence number (keys)
             plcInfo.update({'revision':f"Major : {str(plcInfo['revision']['major'])} / Minor : {str(plcInfo['revision']['minor'])}"})
             table = Table(box=box.ROUNDED) # Create a table
             table.add_column('PLC Information', justify='left') # Add column
             table.add_column('Sequences', justify='left') # Add column
             textInfo = '\n'.join(f"{k.capitalize().replace('_', ' ').ljust(15)} |   {v}" for k, v in plcInfo.items()) # Combine the PLC information into one string
-            textSeq = '\n'.join(f"{k} - {v}" for k, v in keySortDict(seqs).items()) # Combine the PLC sequences into one string
+            textSeq = '\n'.join(f"{k} - {v}" for k, v in seqs.items()) # Combine the PLC sequences into one string
             table.add_row(textInfo, textSeq) # Add row
             print(table)
+            for k, v in seqs.items(): # Loop for each sequence selected by the user
+                maxStep = plc.read(f"zzSeq[{k}].MaxStepNo").value
+                tags.setdefault(k, 
+                    [f"zzSeq[{k}].MaxStepNo", 
+                    f"Program:{v}.zzSteptimeLast[1]{{{maxStep}}}", 
+                    f"Program:{v}.zzSteptimeLong[1]{{{maxStep}}}",
+                    f"Program:{v}.zzSteptimeShort[1]{{{maxStep}}}",
+                    f"Program:{v}.zzStepRefTime[xxTypexx,1]{{{maxStep}}}"]) # Add the sequence tags to the dictionary of tags
+                print(f"Initialized step tags for sequence {k}: {v}, max step = {str(maxStep)}")
             plc.close()
-            initOK = True
         else:
             print('Failed to establish connection to PLC')
     except Exception:
         plc.close()
         traceback.print_exc()
-    return plc, initOK, keySortDict(seqs) # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
-
-def initTags(plc, sequences, selSeq): # Funtion to create all the step data tags required to read from and write to the PLC
-    tags = {}
-    seqs = extractSequences(sequences, selSeq)
-    for seq in seqs: # Loop for each sequence selected by the user
-        maxStep = 99 # Max step initially set to 99
-        try: # Read the max step for the specified sequence
-            if seq in list(sequences.keys()): # Check the sequence is in the list of PLC sequences
-                plc.open()
-                maxStep = plc.read(f"zzSeq[{seq}].MaxStepNo")
-                tags.setdefault(seq, 
-                    [f"zzSeq[{seq}].MaxStepNo", 
-                    f"Program:{sequences[seq]}.zzSteptimeLast[1]{{{maxStep.value}}}", 
-                    f"Program:{sequences[seq]}.zzSteptimeLong[1]{{{maxStep.value}}}",
-                    f"Program:{sequences[seq]}.zzSteptimeShort[1]{{{maxStep.value}}}",
-                    f"Program:{sequences[seq]}.zzStepRefTime[xxTypexx,1]{{{maxStep.value}}}"]) # Add the sequence tags to the dictionary of tags
-                print(f"Initialized step tags for sequence {seq}: {sequences[seq]}, max step = {str(maxStep)}")
-                plc.close()
-            else:
-                print(f"Sequence {seq} does not exist in the PLC")
-        except Exception:
-            plc.close()
-            traceback.print_exc()     
-    return tags # Return the tags to be used within other functions
+    return plc, seqs, tags # Return the LogixDriver and a key sorted dictionary of sequence programs in the connected PLC
 
 def clear(plc, tags, selSeq): # Function to clear the current data within the PLC of the step time tags
     seqs = extractSequences(tags, selSeq)
@@ -219,6 +220,22 @@ def view(plc, sequences, tags, selSeq): # Function to display the last, longest 
 def write(plc, tags, selSeq): # Function to write data to the step refrence time tag in the PLC
     seqs = extractSequences(tags, selSeq)
     llsOK, addTimeOK, typeOK = False, False, False
+    typeRegex = re.compile(r'''
+	\d{1,2}$ # 1 or 2 digits only
+	| ^cancel$ # Cancel the operation
+	''', re.VERBOSE|re.I)
+    writeRegex = re.compile(r'''
+    ^last$ # Write zzSteptimeLast values
+    | ^long$ # Write zzSteptimeLong values
+    | ^short$ # Write zzSteptimeShort values
+    | ^cancel$ # Cancel operation
+    ''', re.VERBOSE|re.I)
+    applyRegex = re.compile(r'''
+    ^none$ # User doesn't want to apply any addition time
+    | ^percentage$ # Apply a percentage of the time, variable time
+    | ^time$ # Apply a fixed time 
+    | ^cancel$ # Cancel operation
+    ''', re.VERBOSE|re.I)
     table = Table(box=box.ROUNDED)
     table.add_column('STEP', justify='center')
     while llsOK == False:
@@ -315,40 +332,8 @@ if __name__ == "__main__":
         # Once a command is recieved, compare it to the avaible commands and run the asscoiated code
         if command == "discover": # DISCOVER - Search the network for ALL CIP devices and return only the PLC's
             discoverPLCs() 
-        elif command == "init plc": # INIT PLC - Initialize a connection to the specified PLC and return/display data from it
-            ipOK, slotOK = False, False
-            while ipOK == False:
-                ip = re.match(ipRegex, input("PLC IP Address: ").strip()) # Request the PLC IP address and check it is the correct format
-                if ip: # IP address format OK
-                    if ip.group().lower() == 'cancel':
-                        print('Operation cancelled\n')
-                    else:
-                        ipOK = True # IP Address OK, allow user to enter slot
-                else: # IP address format not OK
-                    print('Format of IP address was incorrect')
-            while slotOK == False:
-                slot = re.match(slotRegex, input("Rack slot: ").strip()) # Request the rack slot number
-                if slot: # Slot format OK
-                    if slot.group().lower() == 'cancel':
-                        print('Operation cancelled\n')
-                    else:
-                        slotOK = True
-                        plc, plcInitOK, sequences = initPLC(ip.group(), slot.group()) # Initialize the connection to the PLC
-                else: # Slot format not OK
-                    print('Format of slot was incorrect')
-        elif command == "init tags": # INIT TAGS - Create the step tags for each sequence discovered in the PLC
-            if plcInitOK == True:
-                print("Choose the sequences you want to initialize the step time tags for. E.g. 1 2 4 7 or ALL or cancel to exit")
-                print(f"PLC Sequences: {' '.join(list(sequences.keys()))}") # Display avaiable sequences 
-                selectedSeq = input('Sequence: ').strip().lower() # User input
-                if selectedSeq == 'cancel' or selectedSeq == '': # If cancel or blank then dont run initTags
-                    print('Operation cancelled or no sequences chosen')
-                else:
-                    if selectedSeq != 'all':
-                        selectedSeq = re.sub(r'\D+', ' ', selectedSeq) # Remove unwanted characters from string
-                    seqTags.update(initTags(plc, sequences, selectedSeq.strip())) # Initialize tags for selected sequences 
-            else:
-                print('A PLC connection has not been initialized yet. Use \'init plc\'')
+        elif command == "init": # INIT - Initialize a connection to the specified PLC and return/display data from it
+            plc, sequences, seqTags = init() # Initialize the connection to the PLC
         elif command == "clear": # CLEAR - Writes zeros to the step time tags for the selected sequences
             if len(seqTags) > 0:
                 print("Choose the sequences you want to clear the step time data for. E.g. 1 2 4 7 or ALL or cancel to exit")
